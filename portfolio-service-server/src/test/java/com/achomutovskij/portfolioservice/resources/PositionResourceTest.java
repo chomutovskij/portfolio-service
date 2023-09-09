@@ -18,15 +18,19 @@ package com.achomutovskij.portfolioservice.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.achomutovskij.portfolioservice.api.BucketPosition;
 import com.achomutovskij.portfolioservice.api.BucketsUpdateRequest;
 import com.achomutovskij.portfolioservice.api.OrderRequest;
+import com.achomutovskij.portfolioservice.api.ProfitLossAmountAndPercent;
 import com.achomutovskij.portfolioservice.api.StockPosition;
 import com.achomutovskij.portfolioservice.api.TradeType;
 import com.achomutovskij.portfolioservice.marketdata.MarketDataProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.palantir.conjure.java.api.errors.ErrorType;
 import com.palantir.conjure.java.api.testing.Assertions;
+import com.palantir.conjure.java.lib.SafeLong;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -40,9 +44,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class PositionResourceTest {
 
-    private static final OffsetDateTime THU_7_SEPT = OffsetDateTime.of(2023, 9, 7, 0, 0, 0, 0, ZoneOffset.UTC);
-
-    private static final OffsetDateTime FRI_8_SEPT = OffsetDateTime.of(2023, 9, 8, 0, 0, 0, 0, ZoneOffset.UTC);
+    private static final OffsetDateTime AUG_11 = OffsetDateTime.of(2023, 8, 11, 0, 0, 0, 0, ZoneOffset.UTC);
+    private static final OffsetDateTime SEPT_7 = OffsetDateTime.of(2023, 9, 7, 0, 0, 0, 0, ZoneOffset.UTC);
+    private static final OffsetDateTime SEPT_8 = OffsetDateTime.of(2023, 9, 8, 0, 0, 0, 0, ZoneOffset.UTC);
 
     @Mock
     private MarketDataProvider marketDataProviderMock;
@@ -59,12 +63,12 @@ class PositionResourceTest {
     @Test
     public void addOrder() {
         String nvidia = "NVDA";
-        Mockito.when(marketDataProviderMock.getPrice(nvidia, THU_7_SEPT)).thenReturn(462.41);
+        Mockito.when(marketDataProviderMock.getPrice(nvidia, SEPT_7)).thenReturn(462.41);
 
         positionResource.addOrder(OrderRequest.builder()
                 .type(TradeType.BUY)
                 .symbol(nvidia)
-                .date(THU_7_SEPT)
+                .date(SEPT_7)
                 .quantity(5)
                 .buckets(Collections.emptySet())
                 .build());
@@ -90,12 +94,12 @@ class PositionResourceTest {
     @Test
     public void addOrderWithBucketsSpecified() {
         String nvidia = "NVDA";
-        Mockito.when(marketDataProviderMock.getPrice(nvidia, THU_7_SEPT)).thenReturn(462.41);
+        Mockito.when(marketDataProviderMock.getPrice(nvidia, SEPT_7)).thenReturn(462.41);
 
         positionResource.addOrder(OrderRequest.builder()
                 .type(TradeType.BUY)
                 .symbol(nvidia)
-                .date(THU_7_SEPT)
+                .date(SEPT_7)
                 .quantity(5)
                 .buckets(ImmutableSet.of("B", "A"))
                 .build());
@@ -121,12 +125,12 @@ class PositionResourceTest {
     @Test
     public void addToBucket() {
         String nvidia = "NVDA";
-        Mockito.when(marketDataProviderMock.getPrice(nvidia, THU_7_SEPT)).thenReturn(462.41);
+        Mockito.when(marketDataProviderMock.getPrice(nvidia, SEPT_7)).thenReturn(462.41);
 
         positionResource.addOrder(OrderRequest.builder()
                 .type(TradeType.BUY)
                 .symbol(nvidia)
-                .date(THU_7_SEPT)
+                .date(SEPT_7)
                 .quantity(5)
                 .buckets(ImmutableSet.of())
                 .build());
@@ -161,12 +165,12 @@ class PositionResourceTest {
     @Test
     public void removeFromBucket() {
         String nvidia = "NVDA";
-        Mockito.when(marketDataProviderMock.getPrice(nvidia, THU_7_SEPT)).thenReturn(462.41);
+        Mockito.when(marketDataProviderMock.getPrice(nvidia, SEPT_7)).thenReturn(462.41);
 
         positionResource.addOrder(OrderRequest.builder()
                 .type(TradeType.BUY)
                 .symbol(nvidia)
-                .date(THU_7_SEPT)
+                .date(SEPT_7)
                 .quantity(5)
                 .buckets(ImmutableSet.of("B", "A"))
                 .build());
@@ -204,22 +208,22 @@ class PositionResourceTest {
     @Test
     public void multipleBuyOrders() {
         String nvidia = "NVDA";
-        Mockito.when(marketDataProviderMock.getPrice(nvidia, THU_7_SEPT)).thenReturn(462.41);
+        Mockito.when(marketDataProviderMock.getPrice(nvidia, SEPT_7)).thenReturn(462.41);
 
         positionResource.addOrder(OrderRequest.builder()
                 .type(TradeType.BUY)
                 .symbol(nvidia)
-                .date(THU_7_SEPT)
+                .date(SEPT_7)
                 .quantity(5)
                 .buckets(ImmutableSet.of("A"))
                 .build());
 
-        Mockito.when(marketDataProviderMock.getPrice(nvidia, FRI_8_SEPT)).thenReturn(455.72);
+        Mockito.when(marketDataProviderMock.getPrice(nvidia, SEPT_8)).thenReturn(455.72);
 
         positionResource.addOrder(OrderRequest.builder()
                 .type(TradeType.BUY)
                 .symbol(nvidia)
-                .date(FRI_8_SEPT)
+                .date(SEPT_8)
                 .quantity(5)
                 .buckets(ImmutableSet.of("B"))
                 .build());
@@ -250,22 +254,22 @@ class PositionResourceTest {
     @Test
     public void closePosition() {
         String nvidia = "NVDA";
-        Mockito.when(marketDataProviderMock.getPrice(nvidia, THU_7_SEPT)).thenReturn(462.41);
+        Mockito.when(marketDataProviderMock.getPrice(nvidia, SEPT_7)).thenReturn(462.41);
 
         positionResource.addOrder(OrderRequest.builder()
                 .type(TradeType.BUY)
                 .symbol(nvidia)
-                .date(THU_7_SEPT)
+                .date(SEPT_7)
                 .quantity(5)
                 .buckets(ImmutableSet.of("A"))
                 .build());
 
-        Mockito.when(marketDataProviderMock.getPrice(nvidia, THU_7_SEPT)).thenReturn(462.41);
+        Mockito.when(marketDataProviderMock.getPrice(nvidia, SEPT_7)).thenReturn(462.41);
 
         positionResource.addOrder(OrderRequest.builder()
                 .type(TradeType.SELL)
                 .symbol(nvidia)
-                .date(THU_7_SEPT)
+                .date(SEPT_7)
                 .quantity(5)
                 .buckets(ImmutableSet.of("A", "B"))
                 .build());
@@ -276,5 +280,64 @@ class PositionResourceTest {
         assertThat(bucketManagementResource.getPositionsInBucket("A")).isEmpty();
         assertThat(bucketManagementResource.getPositionsInBucket("B")).isEmpty();
         assertThat(bucketManagementResource.getAllBuckets()).isEqualTo(ImmutableList.of("A", "B"));
+    }
+
+    @Test
+    public void bucketPositionPerformance() {
+        String nvidia = "NVDA";
+        String amazon = "AMZN";
+        String tesla = "TSLA";
+
+        Mockito.when(marketDataProviderMock.getPrice(nvidia, AUG_11)).thenReturn(408.55);
+        Mockito.when(marketDataProviderMock.getPrice(amazon, AUG_11)).thenReturn(138.41);
+        Mockito.when(marketDataProviderMock.getPrice(tesla, AUG_11)).thenReturn(242.65);
+
+        positionResource.addOrder(OrderRequest.builder()
+                .type(TradeType.BUY)
+                .symbol(nvidia)
+                .date(AUG_11)
+                .quantity(5)
+                .buckets(ImmutableSet.of("A"))
+                .build());
+
+        positionResource.addOrder(OrderRequest.builder()
+                .type(TradeType.BUY)
+                .symbol(amazon)
+                .date(AUG_11)
+                .quantity(5)
+                .buckets(ImmutableSet.of("A"))
+                .build());
+
+        positionResource.addOrder(OrderRequest.builder()
+                .type(TradeType.BUY)
+                .symbol(tesla)
+                .date(AUG_11)
+                .quantity(5)
+                .buckets(ImmutableSet.of("A"))
+                .build());
+
+        assertThat(bucketManagementResource.getPositionsInBucket("A"))
+                .isEqualTo(ImmutableSet.of(nvidia, amazon, tesla));
+
+        Mockito.when(marketDataProviderMock.getLatestPrice(nvidia)).thenReturn(455.72);
+        Mockito.when(marketDataProviderMock.getLatestPrice(amazon)).thenReturn(138.23);
+        Mockito.when(marketDataProviderMock.getLatestPrice(tesla)).thenReturn(248.5);
+
+        BucketPosition bucketPosition = positionResource.getBucketPosition("A");
+
+        assertThat(bucketPosition)
+                .isEqualTo(BucketPosition.builder()
+                        .name("A")
+                        .totalNumberOfShares(SafeLong.of(15))
+                        .totalPurchaseCost(3948.05)
+                        .totalMarketValue(4212.25)
+                        .numberOfPositions(3)
+                        .profitLossAmount(264.2)
+                        .profitLossPercent(6.69)
+                        .bucketBreakdown(ImmutableSortedMap.of(
+                                "AMZN", ProfitLossAmountAndPercent.of(-0.9, -0.13),
+                                "NVDA", ProfitLossAmountAndPercent.of(235.85, 11.55),
+                                "TSLA", ProfitLossAmountAndPercent.of(29.25, 2.41)))
+                        .build());
     }
 }
