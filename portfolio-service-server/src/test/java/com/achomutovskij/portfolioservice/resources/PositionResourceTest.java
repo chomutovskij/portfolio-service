@@ -159,6 +159,49 @@ class PositionResourceTest {
     }
 
     @Test
+    public void removeFromBucket() {
+        String nvidia = "NVDA";
+        Mockito.when(marketDataProviderMock.getPrice(nvidia, THU_7_SEPT)).thenReturn(462.41);
+
+        positionResource.addOrder(OrderRequest.builder()
+                .type(TradeType.BUY)
+                .symbol(nvidia)
+                .date(THU_7_SEPT)
+                .quantity(5)
+                .buckets(ImmutableSet.of("B", "A"))
+                .build());
+
+        assertThat(bucketManagementResource.getPositionsInBucket("A")).isEqualTo(ImmutableSet.of(nvidia));
+        assertThat(bucketManagementResource.getPositionsInBucket("B")).isEqualTo(ImmutableSet.of(nvidia));
+        assertThat(bucketManagementResource.getBucketsForSymbol(nvidia)).isEqualTo(ImmutableList.of("A", "B"));
+        assertThat(bucketManagementResource.getAllBuckets()).isEqualTo(ImmutableList.of("A", "B"));
+
+        positionResource.removeSymbolFromBuckets(BucketsUpdateRequest.of(nvidia, ImmutableSet.of("B")));
+
+        assertThat(bucketManagementResource.getPositionsInBucket("A")).isEqualTo(ImmutableSet.of(nvidia));
+        assertThat(bucketManagementResource.getPositionsInBucket("B")).isEmpty();
+        assertThat(bucketManagementResource.getBucketsForSymbol(nvidia)).isEqualTo(ImmutableList.of("A"));
+        assertThat(bucketManagementResource.getAllBuckets()).isEqualTo(ImmutableList.of("A", "B"));
+
+        Mockito.when(marketDataProviderMock.getLatestPrice(nvidia)).thenReturn(455.72);
+
+        StockPosition stockPosition = positionResource.getStockPosition("NVDA");
+
+        assertThat(stockPosition)
+                .isEqualTo(StockPosition.builder()
+                        .tradeType(TradeType.BUY)
+                        .quantity(5)
+                        .totalPurchaseCost(2312.05)
+                        .totalMarketValue(2278.6)
+                        .avgCostPerShare(462.41)
+                        .position(1)
+                        .profitLossAmount(-33.45)
+                        .profitLossPercent(-1.45)
+                        .buckets(ImmutableList.of("A"))
+                        .build());
+    }
+
+    @Test
     public void multipleBuyOrders() {
         String nvidia = "NVDA";
         Mockito.when(marketDataProviderMock.getPrice(nvidia, THU_7_SEPT)).thenReturn(462.41);
