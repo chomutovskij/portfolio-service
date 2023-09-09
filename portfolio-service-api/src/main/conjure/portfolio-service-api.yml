@@ -1,0 +1,189 @@
+types:
+  definitions:
+    default-package: com.achomutovskij.portfolioservice.api
+    objects:
+
+      TradeType:
+        values:
+          - BUY
+          - SELL
+
+      OrderRequest:
+        fields:
+          type: TradeType
+          symbol: string
+          quantity: integer
+          date: datetime
+          buckets: set<string> # can be empty
+
+      BucketsUpdateRequest:
+        fields:
+          symbol: string
+          buckets: set<string>
+
+      StockPosition:
+        fields:
+          tradeType: TradeType
+          quantity: integer
+          avgCostPerShare: double
+          totalPurchaseCost: double
+          totalMarketValue: double
+          position: integer
+          profitLossAmount: double
+          profitLossPercent: double
+          buckets: list<string>
+
+      ProfitLossAmountAndPercent:
+        fields:
+          profitLossAmount: double
+          profitLossPercent: double
+
+      BucketPosition:
+        fields:
+          name: string
+          totalNumberOfShares: safelong
+          totalPurchaseCost: double
+          totalMarketValue: double
+          numberOfPositions: integer
+          profitLossAmount: double
+          profitLossPercent: double
+          bucketBreakdown: map<string, ProfitLossAmountAndPercent>
+
+    errors:
+      BucketCreationFailed:
+        namespace: Bucket
+        code: INVALID_ARGUMENT
+        safe-args:
+          name: string
+          reason: string
+      BucketNotFound:
+        namespace: Bucket
+        code: NOT_FOUND
+        safe-args:
+          name: string
+      DateNotFound:
+        namespace: Date
+        code: NOT_FOUND
+        safe-args:
+          name: datetime
+      SymbolNotFound:
+        namespace: Data
+        code: NOT_FOUND
+        safe-args:
+          symbol: string
+          reason: string
+      NoSuchHolding:
+        namespace: Holding
+        code: NOT_FOUND
+        safe-args:
+          name: string
+          reason: string
+
+
+services:
+  BucketManagementService:
+    name: Bucket Management Service
+    package: com.achomutovskij.portfolioservice.api
+    base-path: /v1/buckets
+    docs: |
+      APIs for managing buckets
+
+    endpoints:
+      createBucket:
+        http: POST /create
+        args:
+          bucketName:
+            param-type: body
+            type: string
+        docs: |
+          Creates a new bucket with the given name.
+
+      deleteBucket:
+        http: DELETE /delete
+        args:
+          bucketName:
+            param-type: body
+            type: string
+        docs: |
+          Deletes the bucket with the given name.
+
+      getAllBuckets:
+        http: GET /all
+        returns: list<string>
+        docs: |
+          Returns all bucket names.
+
+  DateService:
+    name: Service to find the available dates
+    package: com.achomutovskij.portfolioservice.api
+    base-path: /v1/dates
+    docs: |
+      APIs for fetching the valid dates for which we have the market data
+
+    endpoints:
+      getAvailableDates:
+        http: GET /all/{symbol}
+        args:
+          symbol: string
+        returns: list<datetime>
+        docs: |
+          Returns all available dates for the symbol.
+
+
+  PositionService:
+    name: Position Service
+    package: com.achomutovskij.portfolioservice.api
+    base-path: /v1/position
+    docs: |
+      APIs for getting the positions
+    endpoints:
+      addOrder:
+        http: POST /add
+        args:
+          orderRequest:
+            param-type: body
+            type: OrderRequest
+        docs: |
+          Adds a new order.
+
+      addSymbolToBuckets:
+        http: POST /add_to_bucket
+        args:
+          bucketsUpdateRequest:
+            param-type: body
+            type: BucketsUpdateRequest
+        docs: |
+          Adds the given symbol position to the specified buckets.
+
+      removeSymbolFromBuckets:
+        http: PUT /remove_from_bucket
+        args:
+          bucketsUpdateRequest:
+            param-type: body
+            type: BucketsUpdateRequest
+        docs: |
+          Removes the given symbol position from the specified buckets.
+
+      getStockPosition:
+        http: GET /stock
+        args:
+          symbol:
+            param-type: query
+            type: string
+        returns: StockPosition
+        docs: |
+          Retrieves the position(s) for the given symbol.
+          @param symbol
+                 The name of the symbol
+
+      getBucketPosition:
+        http: GET /bucket
+        args:
+          name:
+            param-type: query
+            type: string
+        returns: BucketPosition
+        docs: |
+          Retrieves the position(s) for the given bucket.
+          @param name
+                 The name of the bucket

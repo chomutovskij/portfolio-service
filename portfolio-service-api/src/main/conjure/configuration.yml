@@ -1,0 +1,8 @@
+types:
+  definitions:
+    default-package: com.achomutovskij.portfolioservice
+    objects:
+      Configuration:
+        fields:
+          port: integer
+          host: string
