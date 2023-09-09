@@ -1,9 +1,7 @@
 # portfolio-service
 - A service to track the performance of a single person's portfolio
-- The service stores the current state of the world in [SQLite database](portfolio-service-server/src/test/resources/database.db).
-  - Reads and writes to the database are thread safe.
-- The information about the devices is fetched from [Rapid API's Mobile Phone Specs Service](https://rapidapi.com/makingdatameaningful/api/mobile-phone-specs-database)
-  - The responses from Rapid API are cached in memory in the [Caffeine Cache](https://github.com/ben-manes/caffeine)  
+- A user can have multiple orders for the same symbol, but we keep only 1 position for each symbol
+- A group of symbols can be placed into a 'bucket'
 - The service template used: [conjure-java-example](https://github.com/palantir/conjure-java-example)
 
 ## How to run locally
