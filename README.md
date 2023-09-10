@@ -14,7 +14,7 @@
 ## APIs
 ### Available dates per symbol:
 ```
-curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/dates/all/GS" | jq
+curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/dates/all/NVDA" | jq
 ```
 
 ### Managing the buckets:
