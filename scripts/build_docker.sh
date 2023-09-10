@@ -13,6 +13,5 @@ tar -xf "./portfolio-service-server/build/distributions/portfolio-service-server
 cp ./portfolio-service-server/var/conf/conf.yml $DEST/portfolio-service-server/var/conf
 
 cd $DEST
-docker build -t "palantirtechnologies/portfolio-service-server:$VERSION" .
-docker tag "palantirtechnologies/portfolio-service-server:$VERSION" "palantirtechnologies/portfolio-service-server:latest"
-
+docker build -t "chomutovskij/portfolio-service-server:$VERSION" .
+docker tag "chomutovskij/portfolio-service-server:$VERSION" "chomutovskij/portfolio-service-server:latest"
