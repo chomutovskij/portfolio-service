@@ -12,7 +12,7 @@
 - `./gradlew run`
 
 ## APIs
-### Available dates per symbol:
+### Available dates for a symbol (needed for [order request](#submit-a-historical-order-order-that-happened-in-the-past)):
 ```
 curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/dates/all/NVDA" | jq
 ```
@@ -51,8 +51,9 @@ curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/po
 curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/position/bucket?name=BucketB" | jq
 ```
 
-### Tools and Libraries
+## Tools used for the service and repo structure
 
+### Tools and Libraries
 This service uses the following tools and libraries, please consult their respective documentation for more information.
 * [conjure](https://github.com/palantir/conjure) - IDL for defining APIs once and generating client/server interfaces in different languages.
     * [conjure-java-runtime](https://github.com/palantir/conjure-java-runtime/) - conjure libraries for HTTP&JSON-based RPC using Retrofit, Feign, OkHttp as clients and Jetty/Jersey as servers
@@ -64,7 +65,6 @@ This service uses the following tools and libraries, please consult their respec
 * [dropwizard](https://www.dropwizard.io/en/stable/) - a simple framework for building web services
 
 ### Project Structure
-
 * `portfolio-service-api` - a sub-project that defines portfolio-service APIs in Conjure and generates both java and typescript bindings.
 
     This is what the api project looks like:
