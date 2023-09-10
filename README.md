@@ -36,6 +36,8 @@ curl -X DELETE -H "Content-Type: application/json" "http://localhost:8346/api/v1
 ### Managing positions:
 #### submit a historical order (order that happened in the past)
 ```
+curl -X POST -H "Content-Type: application/json" -d '{"type": "SELL", "symbol": "AMZN", "quantity": 3, "date": "2023-08-29T00:00:00Z", "buckets": ["BucketA"]}' "http://localhost:8346/api/v1/position/add"
+
 curl -X POST -H "Content-Type: application/json" -d '{"type": "BUY", "symbol": "NVDA", "quantity": 10, "date": "2023-08-29T00:00:00Z", "buckets": ["BucketB"]}' "http://localhost:8346/api/v1/position/add"
 
 curl -X POST -H "Content-Type: application/json" -d '{"type": "BUY", "symbol": "TSLA", "quantity": 5, "date": "2023-08-29T00:00:00Z", "buckets": []}' "http://localhost:8346/api/v1/position/add"
