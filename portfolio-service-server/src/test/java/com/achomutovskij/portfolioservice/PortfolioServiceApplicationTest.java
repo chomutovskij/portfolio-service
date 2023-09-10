@@ -16,13 +16,23 @@
 
 package com.achomutovskij.portfolioservice;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.achomutovskij.portfolioservice.api.BucketManagementService;
+import com.achomutovskij.portfolioservice.api.BucketPosition;
+import com.achomutovskij.portfolioservice.api.BucketsUpdateRequest;
+import com.achomutovskij.portfolioservice.api.OrderRequest;
 import com.achomutovskij.portfolioservice.api.PositionService;
+import com.achomutovskij.portfolioservice.api.StockPosition;
+import com.achomutovskij.portfolioservice.api.TradeType;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.palantir.conjure.java.api.config.service.UserAgent;
 import com.palantir.conjure.java.client.config.ClientConfiguration;
 import com.palantir.conjure.java.client.config.ClientConfigurations;
 import com.palantir.conjure.java.client.jaxrs.JaxRsClient;
+import com.palantir.conjure.java.lib.SafeLong;
 import com.palantir.conjure.java.okhttp.NoOpHostEventsSink;
 import io.undertow.Undertow;
 import java.io.File;
@@ -35,16 +45,19 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("StrictUnusedVariable")
 public class PortfolioServiceApplicationTest {
+
+    private static final OffsetDateTime SEPT_5 = OffsetDateTime.of(2023, 9, 5, 0, 0, 0, 0, ZoneOffset.UTC);
 
     private static BucketManagementService bucketManagementService;
     private static PositionService positionService;
@@ -59,7 +72,7 @@ public class PortfolioServiceApplicationTest {
         server = PortfolioServiceApplication.startServer(
                 Configuration.builder().port(8345).host("0.0.0.0").build());
 
-        File crtFile = new File("src/test/resources/certs/ca-cert");
+        File crtFile = new File("var/certs/ca-cert");
         Certificate certificate =
                 CertificateFactory.getInstance("X.509").generateCertificate(new FileInputStream(crtFile));
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -98,6 +111,99 @@ public class PortfolioServiceApplicationTest {
         }
     }
 
-    @AfterEach
-    void afterEach() {}
+    @Test
+    public void compositeTest() {
+        bucketManagementService.createBucket("BucketA");
+        assertThat(bucketManagementService.getAllBuckets()).isEqualTo(ImmutableMap.of("BucketA", ImmutableList.of()));
+
+        positionService.addOrder(OrderRequest.builder()
+                .type(TradeType.BUY)
+                .symbol("TSLA")
+                .date(SEPT_5)
+                .quantity(11)
+                .buckets(ImmutableSet.of("BucketB"))
+                .build());
+
+        positionService.addOrder(OrderRequest.builder()
+                .type(TradeType.BUY)
+                .symbol("TSLA")
+                .date(SEPT_5)
+                .quantity(2)
+                .buckets(ImmutableSet.of("BucketZ"))
+                .build());
+
+        positionService.addOrder(OrderRequest.builder()
+                .type(TradeType.BUY)
+                .symbol("NVDA")
+                .date(SEPT_5)
+                .quantity(5)
+                .buckets(ImmutableSet.of("BucketB"))
+                .build());
+
+        positionService.addOrder(OrderRequest.builder()
+                .type(TradeType.SELL)
+                .symbol("AMZN")
+                .date(SEPT_5)
+                .quantity(2)
+                .buckets(ImmutableSet.of("BucketA"))
+                .build());
+
+        positionService.addOrder(OrderRequest.builder()
+                .type(TradeType.SELL)
+                .symbol("GS")
+                .date(SEPT_5)
+                .quantity(1)
+                .buckets(ImmutableSet.of())
+                .build());
+
+        assertThat(bucketManagementService.getAllBuckets())
+                .isEqualTo(ImmutableMap.of(
+                        "BucketA", ImmutableList.of("AMZN"),
+                        "BucketB", ImmutableList.of("NVDA", "TSLA"),
+                        "BucketZ", ImmutableList.of("TSLA")));
+
+        StockPosition tslaStockPosition = positionService.getStockPosition("TSLA");
+        assertThat(tslaStockPosition.getQuantity()).isEqualTo(13);
+        assertThat(tslaStockPosition.getBuckets()).isEqualTo(ImmutableList.of("BucketB", "BucketZ"));
+
+        StockPosition nvdaStockPosition = positionService.getStockPosition("NVDA");
+        assertThat(nvdaStockPosition.getQuantity()).isEqualTo(5);
+        assertThat(nvdaStockPosition.getBuckets()).isEqualTo(ImmutableList.of("BucketB"));
+
+        StockPosition amznStockPosition = positionService.getStockPosition("AMZN");
+        assertThat(amznStockPosition.getQuantity()).isEqualTo(-2);
+        assertThat(amznStockPosition.getBuckets()).isEqualTo(ImmutableList.of("BucketA"));
+
+        StockPosition gsStockPosition = positionService.getStockPosition("GS");
+        assertThat(gsStockPosition.getQuantity()).isEqualTo(-1);
+        assertThat(gsStockPosition.getBuckets()).isEqualTo(ImmutableList.of());
+
+        BucketPosition bucketAPosition = positionService.getBucketPosition("BucketA");
+        assertThat(bucketAPosition.getTotalNumberOfSharesLong()).isEqualTo(SafeLong.of(0));
+        assertThat(bucketAPosition.getTotalNumberOfSharesShort()).isEqualTo(SafeLong.of(-2));
+
+        BucketPosition bucketBPosition = positionService.getBucketPosition("BucketB");
+        assertThat(bucketBPosition.getTotalNumberOfSharesLong()).isEqualTo(SafeLong.of(18));
+        assertThat(bucketBPosition.getTotalNumberOfSharesShort()).isEqualTo(SafeLong.of(0));
+
+        positionService.addSymbolToBuckets(BucketsUpdateRequest.of("GS", ImmutableSet.of("BucketZ")));
+        assertThat(bucketManagementService.getAllBuckets())
+                .isEqualTo(ImmutableMap.of(
+                        "BucketA", ImmutableList.of("AMZN"),
+                        "BucketB", ImmutableList.of("NVDA", "TSLA"),
+                        "BucketZ", ImmutableList.of("GS", "TSLA")));
+
+        positionService.removeSymbolFromBuckets(BucketsUpdateRequest.of("TSLA", ImmutableSet.of("BucketB")));
+        assertThat(bucketManagementService.getAllBuckets())
+                .isEqualTo(ImmutableMap.of(
+                        "BucketA", ImmutableList.of("AMZN"),
+                        "BucketB", ImmutableList.of("NVDA"),
+                        "BucketZ", ImmutableList.of("GS", "TSLA")));
+
+        bucketManagementService.deleteBucket("BucketZ");
+        assertThat(bucketManagementService.getAllBuckets())
+                .isEqualTo(ImmutableMap.of(
+                        "BucketA", ImmutableList.of("AMZN"),
+                        "BucketB", ImmutableList.of("NVDA")));
+    }
 }
