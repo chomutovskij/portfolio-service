@@ -18,7 +18,7 @@ curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/da
 ```
 
 ### Managing the buckets:
-#### create a new empty bucket (optional, bucket can also be created when an order is submitted, see next section)
+#### create a new empty bucket (optional, bucket can also be created when an order is submitted, [submit order API](#submit-a-historical-order-order-that-happened-in-the-past))
 ```
 curl -X POST "http://localhost:8346/api/v1/buckets/create/BucketA"
 ```
@@ -44,11 +44,10 @@ curl -X POST -H "Content-Type: application/json" -d '{"type": "BUY", "symbol": "
 curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/position/stock?symbol=NVDA" | jq
 ```
 
-#### retrieve information about the bucket (a collection of single symbol holdings)
+#### retrieve information about the bucket (a collection of symbol holdings)
 ```
 curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/position/bucket?name=BucketB" | jq
 ```
-
 
 ### Tools and Libraries
 
