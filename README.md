@@ -5,7 +5,7 @@
 - The service template used: [conjure-java-example](https://github.com/palantir/conjure-java-example)
 
 ## How to run locally
-### Running the server with a docker:
+### Running the server with docker:
 - docker image is available at [docker hub](https://hub.docker.com/r/chomutovskij/portfolio-service-server/tags)
 - run the below 2 commands in the terminal:
   - `docker pull chomutovskij/portfolio-service-server:2.0.0`
