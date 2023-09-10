@@ -16,19 +16,11 @@
 
 package com.achomutovskij.portfolioservice.util;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 public final class OffsetDateTimeUtils {
     private OffsetDateTimeUtils() {}
-
-    public static OffsetDateTime getValidTradingDateStartOfDayInUtc() {
-        return LocalDate.now(ZoneOffset.UTC)
-                .minusDays(3)
-                .atStartOfDay(ZoneOffset.UTC)
-                .toOffsetDateTime();
-    }
 
     public static OffsetDateTime utcStartOfDay(OffsetDateTime dateTime) {
         return dateTime.withOffsetSameInstant(ZoneOffset.UTC)

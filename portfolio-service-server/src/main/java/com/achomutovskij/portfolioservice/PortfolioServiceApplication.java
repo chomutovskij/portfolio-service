@@ -40,7 +40,6 @@ import java.time.Duration;
 import javax.net.ssl.SSLContext;
 import okhttp3.OkHttpClient;
 
-@SuppressWarnings("StrictUnusedVariable")
 public final class PortfolioServiceApplication {
 
     private static final SafeLogger log = SafeLoggerFactory.get(PortfolioServiceApplication.class);
@@ -67,8 +66,9 @@ public final class PortfolioServiceApplication {
                 SslConfiguration.of(Paths.get(TRUSTSTORE_PATH), Paths.get(KEY_STORE_PATH), KEYSTORE_PASSWORD);
         SSLContext sslContext = SslSocketFactories.createSslContext(sslConfig);
 
-        MarketDataProvider marketDataProvider =
-                new MarketDataProvider(new MarketApiClient(new OkHttpClient()), Duration.ofMinutes(15L));
+        MarketDataProvider marketDataProvider = new MarketDataProvider(
+                new MarketApiClient(new OkHttpClient()),
+                Duration.ofMinutes(conf.getExternalApiResponseCacheDurationMinutes()));
 
         BucketManagementResource bucketManagementResource = new BucketManagementResource();
 
@@ -87,6 +87,11 @@ public final class PortfolioServiceApplication {
                 .build();
 
         server.start();
+
+        log.info("------------!!!!!---------------");
+        log.info("The portfolio service is running");
+        log.info("Run curl commands to test");
+        log.info("------------!!!!!---------------");
 
         return server;
     }

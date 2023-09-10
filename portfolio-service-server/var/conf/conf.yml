@@ -1,2 +1,3 @@
 port: 8345
 host: 0.0.0.0
+external-api-response-cache-duration-minutes: 15

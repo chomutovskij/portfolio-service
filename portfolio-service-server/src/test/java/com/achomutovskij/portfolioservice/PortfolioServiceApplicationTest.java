@@ -69,8 +69,11 @@ public class PortfolioServiceApplicationTest {
             throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException,
                     KeyManagementException {
 
-        server = PortfolioServiceApplication.startServer(
-                Configuration.builder().port(8345).host("0.0.0.0").build());
+        server = PortfolioServiceApplication.startServer(Configuration.builder()
+                .port(8345)
+                .host("0.0.0.0")
+                .externalApiResponseCacheDurationMinutes(15)
+                .build());
 
         File crtFile = new File("var/certs/ca-cert");
         Certificate certificate =

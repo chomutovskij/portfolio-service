@@ -6,3 +6,4 @@ types:
         fields:
           port: integer
           host: string
+          external-api-response-cache-duration-minutes: integer

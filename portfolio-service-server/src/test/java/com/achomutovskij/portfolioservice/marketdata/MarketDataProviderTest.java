@@ -18,18 +18,18 @@ package com.achomutovskij.portfolioservice.marketdata;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.achomutovskij.portfolioservice.util.OffsetDateTimeUtils;
 import com.palantir.conjure.java.api.errors.ErrorType;
 import com.palantir.conjure.java.api.testing.Assertions;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class MarketDataProviderTest {
 
-    private static final OffsetDateTime VALID_DATE = OffsetDateTimeUtils.getValidTradingDateStartOfDayInUtc();
+    private static final OffsetDateTime VALID_DATE = OffsetDateTime.of(2023, 9, 7, 0, 0, 0, 0, ZoneOffset.UTC);
 
     private MarketDataProvider marketDataProvider;
 

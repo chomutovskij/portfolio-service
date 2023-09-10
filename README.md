@@ -11,56 +11,62 @@
 - set `JAVA_HOME` to java 15
 - `./gradlew run`
 
+### Note on certificates
+- The certificates are self-signed, which means you will have to pass in `-k` in the below curl commands (if you are calling the service via `https`)
+- If you don't want to pass in `-k`, you can call the service via `http` (change the port number from `8345` to `8346`)
+  - e.g. `curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/dates/all/NVDA" | jq`
+- For more information on how these certificates were generated, refer to the [certificates section](#certificates)
+
 ## APIs
 ### Available dates for a symbol (needed for [order request](#submit-a-historical-order-order-that-happened-in-the-past)):
 ```
-curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/dates/all/NVDA" | jq
+curl -k -X GET -H "Content-Type: application/json" "https://localhost:8345/api/v1/dates/all/NVDA" | jq
 ```
 
 ### Managing the buckets:
 #### create a new empty bucket (optional, bucket can also be created when an [order is submitted](#submit-a-historical-order-order-that-happened-in-the-past))
 ```
-curl -X POST "http://localhost:8346/api/v1/buckets/create/BucketA"
+curl -k -X POST "https://localhost:8345/api/v1/buckets/create/BucketA"
 ```
 
 #### list all buckets and their contents (without calculating the P/L)
 ```
-curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/buckets/all" | jq
+curl -k -X GET -H "Content-Type: application/json" "https://localhost:8345/api/v1/buckets/all" | jq
 ```
 
 #### delete a bucket (note that the positions won't be closed)
 ```
-curl -X DELETE -H "Content-Type: application/json" "http://localhost:8346/api/v1/buckets/delete/BucketA"
+curl -k -X DELETE -H "Content-Type: application/json" "https://localhost:8345/api/v1/buckets/delete/BucketA"
 ```
 
 ### Managing positions:
 #### submit a historical order (order that happened in the past)
 ```
-curl -X POST -H "Content-Type: application/json" -d '{"type": "SELL", "symbol": "AMZN", "quantity": 3, "date": "2023-08-29T00:00:00Z", "buckets": ["BucketA"]}' "http://localhost:8346/api/v1/position/add"
+curl -k -X POST -H "Content-Type: application/json" -d '{"type": "SELL", "symbol": "AMZN", "quantity": 3, "date": "2023-08-29T00:00:00Z", "buckets": ["BucketA"]}' "https://localhost:8345/api/v1/position/add"
 
-curl -X POST -H "Content-Type: application/json" -d '{"type": "BUY", "symbol": "NVDA", "quantity": 10, "date": "2023-08-29T00:00:00Z", "buckets": ["BucketB"]}' "http://localhost:8346/api/v1/position/add"
+curl -k -X POST -H "Content-Type: application/json" -d '{"type": "BUY", "symbol": "NVDA", "quantity": 10, "date": "2023-08-29T00:00:00Z", "buckets": ["BucketB"]}' "https://localhost:8345/api/v1/position/add"
 
-curl -X POST -H "Content-Type: application/json" -d '{"type": "BUY", "symbol": "TSLA", "quantity": 5, "date": "2023-08-29T00:00:00Z", "buckets": []}' "http://localhost:8346/api/v1/position/add"
+curl -k -X POST -H "Content-Type: application/json" -d '{"type": "BUY", "symbol": "TSLA", "quantity": 5, "date": "2023-08-29T00:00:00Z", "buckets": []}' "https://localhost:8345/api/v1/position/add"
 ```
 
 #### retrieve information about the position (single symbol holding)
 ```
-curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/position/stock?symbol=NVDA" | jq
+curl -k -X GET -H "Content-Type: application/json" "https://localhost:8345/api/v1/position/stock?symbol=NVDA" | jq
 ```
 
 #### retrieve information about the bucket (a collection of symbol holdings)
 ```
-curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/position/bucket?name=BucketB" | jq
+curl -k -X GET -H "Content-Type: application/json" "https://localhost:8345/api/v1/position/bucket?name=BucketB" | jq
 ```
 
 #### add an existing position to one or more buckets (will create the buckets if needed)
 ```
-curl -X PUT -H "Content-Type: application/json" -d '{"symbol": "NVDA", "buckets": ["BucketA"]}' "http://localhost:8346/api/v1/position/add_to_buckets"
+curl -k -X PUT -H "Content-Type: application/json" -d '{"symbol": "NVDA", "buckets": ["BucketA"]}' "https://localhost:8345/api/v1/position/add_to_buckets"
 ```
 
 #### remove an existing position from one or more buckets
 ```
-curl -X PUT -H "Content-Type: application/json" -d '{"symbol": "NVDA", "buckets": ["BucketB"]}' "http://localhost:8346/api/v1/position/remove_from_buckets"
+curl -k -X PUT -H "Content-Type: application/json" -d '{"symbol": "NVDA", "buckets": ["BucketB"]}' "https://localhost:8345/api/v1/position/remove_from_buckets"
 ```
 
 ## Tools used for the service and repo structure

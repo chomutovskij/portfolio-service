@@ -28,5 +28,6 @@ public class ConfigurationLoaderTest {
         Configuration conf = ConfigurationLoader.load("src/test/resources/test_conf.yml");
         assertThat(conf.getHost()).isEqualTo("0.0.0.0");
         assertThat(conf.getPort()).isEqualTo(8345);
+        assertThat(conf.getExternalApiResponseCacheDurationMinutes()).isEqualTo(15);
     }
 }
