@@ -10,4 +10,4 @@ RUN chmod +x /opt/chomutovskij/services/portfolio-service-server/bin/portfolio-s
 EXPOSE 8345
 
 WORKDIR /opt/chomutovskij/services/portfolio-service-server/
-ENTRYPOINT ["./bin/portfolio-service-server", "server", "var/conf/conf.yml"]
+CMD ./bin/portfolio-service-server
