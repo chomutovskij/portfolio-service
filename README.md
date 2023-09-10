@@ -18,7 +18,7 @@ curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/da
 ```
 
 ### Managing the buckets:
-#### create a new empty bucket (optional, bucket can also be created when an order is submitted, [submit order API](#submit-a-historical-order-order-that-happened-in-the-past))
+#### create a new empty bucket (optional, bucket can also be created when an [order is submitted](#submit-a-historical-order-order-that-happened-in-the-past))
 ```
 curl -X POST "http://localhost:8346/api/v1/buckets/create/BucketA"
 ```
@@ -37,6 +37,8 @@ curl -X DELETE -H "Content-Type: application/json" "http://localhost:8346/api/v1
 #### submit a historical order (order that happened in the past)
 ```
 curl -X POST -H "Content-Type: application/json" -d '{"type": "BUY", "symbol": "NVDA", "quantity": 10, "date": "2023-08-29T00:00:00Z", "buckets": ["BucketB"]}' "http://localhost:8346/api/v1/position/add"
+
+curl -X POST -H "Content-Type: application/json" -d '{"type": "BUY", "symbol": "TSLA", "quantity": 5, "date": "2023-08-29T00:00:00Z", "buckets": []}' "http://localhost:8346/api/v1/position/add"
 ```
 
 #### retrieve information about the position (single symbol holding)
