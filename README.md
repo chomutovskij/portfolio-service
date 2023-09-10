@@ -5,11 +5,12 @@
 - The service template used: [conjure-java-example](https://github.com/palantir/conjure-java-example)
 
 ## How to run locally
-### Running the server
-- clone the repo
-- `cd portfolio-service`
-- set `JAVA_HOME` to java 15
-- `./gradlew run`
+### Running the server with a docker:
+- docker image is available at [docker hub](https://hub.docker.com/r/chomutovskij/portfolio-service-server/tags)
+- run the below 2 commands in the terminal:
+  - `docker pull chomutovskij/portfolio-service-server:2.0.0`
+  - `docker run -p 8345:8345 -p 8346:8346 chomutovskij/portfolio-service-server:2.0.0`
+- in a separate terminal window, run the [curls](#apis), but first read the note on certificates just below
 
 ### Note on certificates
 - The certificates are self-signed, which means you will have to pass in `-k` in the below curl commands (if you are calling the service via `https`)
