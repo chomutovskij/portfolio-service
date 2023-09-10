@@ -1,6 +1,6 @@
 # portfolio-service
 - A service to track the performance of a single person's portfolio
-- A user can have multiple orders for the same symbol, but we keep only 1 position for each symbol
+- A user can have multiple orders for the same symbol, but we keep only 1 position for each symbol (e.g. IBKR does not allow multiple positions for the same symbol, they get collapsed into a single position)
 - A group of symbols can be placed into a 'bucket'
 - The service template used: [conjure-java-example](https://github.com/palantir/conjure-java-example)
 
