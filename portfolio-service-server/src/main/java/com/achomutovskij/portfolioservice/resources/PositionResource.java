@@ -16,9 +16,11 @@
 
 package com.achomutovskij.portfolioservice.resources;
 
+import com.achomutovskij.portfolioservice.api.BucketErrors;
 import com.achomutovskij.portfolioservice.api.BucketPosition;
 import com.achomutovskij.portfolioservice.api.BucketsUpdateRequest;
 import com.achomutovskij.portfolioservice.api.HoldingErrors;
+import com.achomutovskij.portfolioservice.api.OrderErrors;
 import com.achomutovskij.portfolioservice.api.OrderRequest;
 import com.achomutovskij.portfolioservice.api.ProfitLossAmountAndPercent;
 import com.achomutovskij.portfolioservice.api.StockPosition;
@@ -45,6 +47,8 @@ import org.decimal4j.mutable.MutableDecimal2f;
 public final class PositionResource implements UndertowPositionService {
 
     private static final String NO_SUCH_HOLDING = "User does not hold specified symbol";
+    private static final String BUCKET_SET_EMPTY = "The bucket set must be non-empty";
+    private static final String QUANTITY_MUST_BE_POSITIVE = "Quantity must be positive";
 
     private final MarketDataProvider marketDataProvider;
     private final BucketManagementResource bucketManager;
@@ -59,6 +63,10 @@ public final class PositionResource implements UndertowPositionService {
 
     @Override
     public void addOrder(OrderRequest orderRequest) {
+        if (orderRequest.getQuantity() <= 0) {
+            throw OrderErrors.invalidQuantityAmount(QUANTITY_MUST_BE_POSITIVE);
+        }
+
         String symbol = orderRequest.getSymbol();
 
         double priceOnSpecifiedDate =
@@ -79,14 +87,10 @@ public final class PositionResource implements UndertowPositionService {
             // we will delete the position from the buckets below in case merged position is an empty optional
             bucketManager.insertSymbolIntoBuckets(symbol, orderRequest.getBuckets());
 
-            mergedPositionOptional.ifPresentOrElse(
-                    merged -> {
-                        symbolPositions.put(symbol, merged);
-                    },
-                    () -> {
-                        symbolPositions.remove(symbol);
-                        bucketManager.removeSymbolFromAllBuckets(symbol);
-                    });
+            mergedPositionOptional.ifPresentOrElse(merged -> symbolPositions.put(symbol, merged), () -> {
+                symbolPositions.remove(symbol);
+                bucketManager.removeSymbolFromAllBuckets(symbol);
+            });
         }
     }
 
@@ -97,6 +101,10 @@ public final class PositionResource implements UndertowPositionService {
             throw HoldingErrors.noSuchHolding(symbol, NO_SUCH_HOLDING);
         }
 
+        if (bucketUpdateRequest.getBuckets().isEmpty()) {
+            throw BucketErrors.bucketSetEmpty(BUCKET_SET_EMPTY);
+        }
+
         bucketManager.insertSymbolIntoBuckets(symbol, bucketUpdateRequest.getBuckets());
     }
 
@@ -105,6 +113,10 @@ public final class PositionResource implements UndertowPositionService {
         String symbol = bucketUpdateRequest.getSymbol();
         if (!symbolPositions.containsKey(symbol)) {
             throw HoldingErrors.noSuchHolding(symbol, NO_SUCH_HOLDING);
+        }
+
+        if (bucketUpdateRequest.getBuckets().isEmpty()) {
+            throw BucketErrors.bucketSetEmpty(BUCKET_SET_EMPTY);
         }
 
         bucketUpdateRequest.getBuckets().forEach(bucket -> bucketManager.removeSymbolFromBucket(bucket, symbol));
@@ -141,7 +153,8 @@ public final class PositionResource implements UndertowPositionService {
         if (symbols.isEmpty()) {
             return BucketPosition.builder()
                     .name(bucketName)
-                    .totalNumberOfShares(SafeLong.of(0))
+                    .totalNumberOfSharesLong(SafeLong.of(0))
+                    .totalNumberOfSharesShort(SafeLong.of(0))
                     .totalPurchaseCost(0)
                     .totalMarketValue(0)
                     .numberOfPositions(0)
@@ -162,7 +175,8 @@ public final class PositionResource implements UndertowPositionService {
 
         return BucketPosition.builder()
                 .name(bucketName)
-                .totalNumberOfShares(SafeLong.of(getTotalNumberOfShares(positions)))
+                .totalNumberOfSharesLong(SafeLong.of(getTotalNumberOfSharesLong(positions)))
+                .totalNumberOfSharesShort(SafeLong.of(getTotalNumberOfSharesShort(positions)))
                 .totalPurchaseCost(getBucketTotalPurchaseCost(positions).doubleValue())
                 .totalMarketValue(getBucketMarketValue(positions, latestPriceForEachSymbol))
                 .numberOfPositions(positions.size())
@@ -190,9 +204,18 @@ public final class PositionResource implements UndertowPositionService {
         return Pair.of(profitLossSum.doubleValue(), profitLossPercentage.doubleValue());
     }
 
-    private static long getTotalNumberOfShares(List<SymbolPosition> positions) {
+    private static long getTotalNumberOfSharesLong(List<SymbolPosition> positions) {
         return positions.stream()
                 .map(SymbolPosition::totalShares)
+                .filter(numberOfShares -> numberOfShares > 0)
+                .mapToLong(Integer::longValue)
+                .sum();
+    }
+
+    private static long getTotalNumberOfSharesShort(List<SymbolPosition> positions) {
+        return positions.stream()
+                .map(SymbolPosition::totalShares)
+                .filter(numberOfShares -> numberOfShares < 0)
                 .mapToLong(Integer::longValue)
                 .sum();
     }

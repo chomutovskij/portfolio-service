@@ -51,6 +51,16 @@ curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/po
 curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/position/bucket?name=BucketB" | jq
 ```
 
+#### add an existing position to one or more buckets (will create the buckets if needed)
+```
+curl -X PUT -H "Content-Type: application/json" -d '{"symbol": "NVDA", "buckets": ["BucketA"]}' "http://localhost:8346/api/v1/position/add_to_buckets"
+```
+
+#### remove an existing position from one or more buckets
+```
+curl -X PUT -H "Content-Type: application/json" -d '{"symbol": "NVDA", "buckets": ["BucketB"]}' "http://localhost:8346/api/v1/position/remove_from_buckets"
+```
+
 ## Tools used for the service and repo structure
 
 ### Tools and Libraries

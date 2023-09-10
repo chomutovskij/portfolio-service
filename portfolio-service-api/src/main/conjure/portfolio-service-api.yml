@@ -41,7 +41,8 @@ types:
       BucketPosition:
         fields:
           name: string
-          totalNumberOfShares: safelong
+          totalNumberOfSharesLong: safelong
+          totalNumberOfSharesShort: safelong
           totalPurchaseCost: double
           totalMarketValue: double
           numberOfPositions: integer
@@ -61,6 +62,11 @@ types:
         code: NOT_FOUND
         safe-args:
           name: string
+      BucketSetEmpty:
+        namespace: Bucket
+        code: INVALID_ARGUMENT
+        safe-args:
+          reason: string
       DateNotFound:
         namespace: Date
         code: NOT_FOUND
@@ -78,7 +84,11 @@ types:
         safe-args:
           name: string
           reason: string
-
+      InvalidQuantityAmount:
+        namespace: Order
+        code: INVALID_ARGUMENT
+        safe-args:
+          reason: string
 
 services:
   DateService:
@@ -140,14 +150,14 @@ services:
           Adds a new order.
 
       addSymbolToBuckets:
-        http: POST /add_to_bucket
+        http: PUT /add_to_buckets
         args:
           bucketsUpdateRequest: BucketsUpdateRequest
         docs: |
           Adds the given symbol position to the specified buckets.
 
       removeSymbolFromBuckets:
-        http: PUT /remove_from_bucket
+        http: PUT /remove_from_buckets
         args:
           bucketsUpdateRequest: BucketsUpdateRequest
         docs: |
