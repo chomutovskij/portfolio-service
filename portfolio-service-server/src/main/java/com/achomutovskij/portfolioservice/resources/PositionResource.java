@@ -28,6 +28,7 @@ import com.achomutovskij.portfolioservice.position.SymbolPosition;
 import com.achomutovskij.portfolioservice.util.OffsetDateTimeUtils;
 import com.palantir.conjure.java.lib.SafeLong;
 import com.palantir.logsafe.Preconditions;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -137,6 +138,18 @@ public final class PositionResource implements UndertowPositionService {
     @Override
     public BucketPosition getBucketPosition(String bucketName) {
         Set<String> symbols = bucketManager.getPositionsInBucket(bucketName);
+        if (symbols.isEmpty()) {
+            return BucketPosition.builder()
+                    .name(bucketName)
+                    .totalNumberOfShares(SafeLong.of(0))
+                    .totalPurchaseCost(0)
+                    .totalMarketValue(0)
+                    .numberOfPositions(0)
+                    .profitLossAmount(0)
+                    .profitLossPercent(0)
+                    .bucketBreakdown(Collections.emptyMap())
+                    .build();
+        }
 
         List<SymbolPosition> positions =
                 symbols.stream().map(symbolPositions::get).collect(Collectors.toList());

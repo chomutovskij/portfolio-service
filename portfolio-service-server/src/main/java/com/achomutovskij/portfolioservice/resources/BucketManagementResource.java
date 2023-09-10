@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -57,8 +58,13 @@ public final class BucketManagementResource implements UndertowBucketManagementS
     }
 
     @Override
-    public List<String> getAllBuckets() {
-        return bucketNameToSymbols.keySet().stream().sorted().collect(Collectors.toList());
+    public Map<String, List<String>> getAllBuckets() {
+        return bucketNameToSymbols.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream().sorted().collect(Collectors.toList()),
+                        (first, _second) -> first,
+                        TreeMap::new));
     }
 
     public void insertSymbolIntoBuckets(String symbol, Set<String> buckets) {
@@ -87,7 +93,10 @@ public final class BucketManagementResource implements UndertowBucketManagementS
     }
 
     public Set<String> getPositionsInBucket(String bucket) {
-        return bucketNameToSymbols.getOrDefault(bucket, Collections.emptySet());
+        if (!bucketNameToSymbols.containsKey(bucket)) {
+            throw BucketErrors.bucketNotFound(bucket);
+        }
+        return bucketNameToSymbols.get(bucket);
     }
 
     public List<String> getBucketsForSymbol(String symbol) {

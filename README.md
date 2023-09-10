@@ -17,29 +17,38 @@
 curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/dates/all/GS" | jq
 ```
 
-### Retrieving information about the device:
+### Managing the buckets:
+#### create a new empty bucket (optional, bucket can also be created when an order is submitted, see next section)
 ```
-curl -X POST "http://localhost:8346/api/v1/management/create/Samsung%20Galaxy%20S5"
-curl -X DELETE "http://localhost:8346/api/v1/management/delete/11"
-curl -X DELETE "http://localhost:8346/api/v1/management/delete/all"
-curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/info/byname/Samsung%20Galaxy%20S9" | jq
-curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/info/byid/2" | jq
-curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/info/all" | jq
-curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/info/all/available" | jq
+curl -X POST "http://localhost:8346/api/v1/buckets/create/BucketA"
 ```
 
-### Reserving and returning the device:
-#### using the device name
+#### list all buckets and their contents (without calculating the P/L)
 ```
-curl -X PUT -H "Content-Type: application/json" -d '{"person": "Andrej", "deviceName": "Nokia 3310"}' "http://localhost:8346/api/v1/booking/reserve"
-curl -X PUT -H "Content-Type: application/json" -d '{"person": "Andrej", "deviceName": "Nokia 3310"}' "http://localhost:8346/api/v1/booking/return"
+curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/buckets/all" | jq
 ```
 
-#### using the device ID
+#### delete a bucket (note that the positions won't be closed)
 ```
-curl -X PUT -H "Content-Type: application/json" -d '{"person": "Andrej", "deviceId": 10}' "http://localhost:8346/api/v1/booking/reserve"
-curl -X PUT -H "Content-Type: application/json" -d '{"person": "Andrej", "deviceId": 10}' "http://localhost:8346/api/v1/booking/return" 
+curl -X DELETE -H "Content-Type: application/json" "http://localhost:8346/api/v1/buckets/delete/BucketA"
 ```
+
+### Managing positions:
+#### submit a historical order (order that happened in the past)
+```
+curl -X POST -H "Content-Type: application/json" -d '{"type": "BUY", "symbol": "NVDA", "quantity": 10, "date": "2023-08-29T00:00:00Z", "buckets": ["BucketB"]}' "http://localhost:8346/api/v1/position/add"
+```
+
+#### retrieve information about the position (single symbol holding)
+```
+curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/position/stock?symbol=NVDA" | jq
+```
+
+#### retrieve information about the bucket (a collection of single symbol holdings)
+```
+curl -X GET -H "Content-Type: application/json" "http://localhost:8346/api/v1/position/bucket?name=BucketB" | jq
+```
+
 
 ### Tools and Libraries
 
@@ -92,7 +101,7 @@ This service uses the following tools and libraries, please consult their respec
     │           └── conf.yml
     ```
     * build.gradle - configures the project with needed dependencies and applies the `gradle-conjure` and `application plugins`, so we can run the server locally or in IDE.
-    * src/main/java - source classes for the dropwizard application. e.g. RecipeBookResource.java class `implements` the generated Jersey interface.
+    * src/main/java - source classes for the dropwizard application. e.g. `DateResource.java` class `implements` the generated Jersey interface.
     * test/main/java - test source classes for simple integration tests that uses generated jersey interface for client interaction.
     * var/conf/conf.yml - the dropwizard application configuration yml file
 

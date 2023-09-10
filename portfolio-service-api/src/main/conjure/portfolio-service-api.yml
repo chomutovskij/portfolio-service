@@ -81,40 +81,8 @@ types:
 
 
 services:
-  BucketManagementService:
-    name: Bucket Management Service
-    package: com.achomutovskij.portfolioservice.api
-    base-path: /v1/buckets
-    docs: |
-      APIs for managing buckets
-
-    endpoints:
-      createBucket:
-        http: POST /create
-        args:
-          bucketName:
-            param-type: body
-            type: string
-        docs: |
-          Creates a new bucket with the given name.
-
-      deleteBucket:
-        http: DELETE /delete
-        args:
-          bucketName:
-            param-type: body
-            type: string
-        docs: |
-          Deletes the bucket with the given name.
-
-      getAllBuckets:
-        http: GET /all
-        returns: list<string>
-        docs: |
-          Returns all bucket names.
-
   DateService:
-    name: Service to find the available dates
+    name: Service to find the valid dates for which we have the market data
     package: com.achomutovskij.portfolioservice.api
     base-path: /v1/dates
     docs: |
@@ -129,6 +97,33 @@ services:
         docs: |
           Returns all available dates for the symbol.
 
+  BucketManagementService:
+    name: Bucket Management Service
+    package: com.achomutovskij.portfolioservice.api
+    base-path: /v1/buckets
+    docs: |
+      APIs for managing buckets
+
+    endpoints:
+      createBucket:
+        http: POST /create/{bucketName}
+        args:
+          bucketName: string
+        docs: |
+          Creates a new bucket with the given name.
+
+      deleteBucket:
+        http: DELETE /delete/{bucketName}
+        args:
+          bucketName: string
+        docs: |
+          Deletes the bucket with the given name.
+
+      getAllBuckets:
+        http: GET /all
+        returns: map<string, list<string>>
+        docs: |
+          Returns all bucket names and their contents.
 
   PositionService:
     name: Position Service
@@ -140,27 +135,21 @@ services:
       addOrder:
         http: POST /add
         args:
-          orderRequest:
-            param-type: body
-            type: OrderRequest
+          orderRequest: OrderRequest
         docs: |
           Adds a new order.
 
       addSymbolToBuckets:
         http: POST /add_to_bucket
         args:
-          bucketsUpdateRequest:
-            param-type: body
-            type: BucketsUpdateRequest
+          bucketsUpdateRequest: BucketsUpdateRequest
         docs: |
           Adds the given symbol position to the specified buckets.
 
       removeSymbolFromBuckets:
         http: PUT /remove_from_bucket
         args:
-          bucketsUpdateRequest:
-            param-type: body
-            type: BucketsUpdateRequest
+          bucketsUpdateRequest: BucketsUpdateRequest
         docs: |
           Removes the given symbol position from the specified buckets.
 

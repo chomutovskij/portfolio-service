@@ -19,6 +19,7 @@ package com.achomutovskij.portfolioservice.resources;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.conjure.java.api.errors.ErrorType;
 import com.palantir.conjure.java.api.testing.Assertions;
@@ -37,7 +38,8 @@ class BucketManagementResourceTest {
     @Test
     public void create() {
         bucketManagementResource.createBucket("BucketA");
-        assertThat(bucketManagementResource.getAllBuckets()).isEqualTo(Collections.singletonList("BucketA"));
+        assertThat(bucketManagementResource.getAllBuckets())
+                .isEqualTo(ImmutableMap.of("BucketA", Collections.emptyList()));
     }
 
     @Test
@@ -45,7 +47,9 @@ class BucketManagementResourceTest {
         bucketManagementResource.createBucket("BucketA");
         Assertions.assertThatServiceExceptionThrownBy(() -> bucketManagementResource.createBucket("BucketA"))
                 .hasType(ErrorType.create(ErrorType.Code.INVALID_ARGUMENT, "Bucket:BucketCreationFailed"));
-        assertThat(bucketManagementResource.getAllBuckets()).isEqualTo(Collections.singletonList("BucketA"));
+        assertThat(bucketManagementResource.getAllBuckets())
+                .isEqualTo(ImmutableMap.of("BucketA", Collections.emptyList()));
+        assertThat(bucketManagementResource.getPositionsInBucket("BucketA")).isEqualTo(ImmutableSet.of());
     }
 
     @Test
@@ -68,19 +72,43 @@ class BucketManagementResourceTest {
         assertThat(bucketManagementResource.getAllBuckets()).isEmpty();
         bucketManagementResource.createBucket("BucketA");
         bucketManagementResource.createBucket("BucketZ");
-        bucketManagementResource.insertSymbolIntoBuckets("NVDA", ImmutableSet.of("BucketA", "BucketB", "BucketC"));
+        bucketManagementResource.insertSymbolIntoBuckets("NVDA", ImmutableSet.of("BucketB", "BucketA", "BucketC"));
+
         assertThat(bucketManagementResource.getAllBuckets())
-                .isEqualTo(ImmutableList.of("BucketA", "BucketB", "BucketC", "BucketZ"));
+                .isEqualTo(ImmutableMap.of(
+                        "BucketA", ImmutableList.of("NVDA"),
+                        "BucketB", ImmutableList.of("NVDA"),
+                        "BucketC", ImmutableList.of("NVDA"),
+                        "BucketZ", ImmutableList.of()));
+
         assertThat(bucketManagementResource.getPositionsInBucket("BucketA")).isEqualTo(ImmutableSet.of("NVDA"));
         assertThat(bucketManagementResource.getPositionsInBucket("BucketB")).isEqualTo(ImmutableSet.of("NVDA"));
         assertThat(bucketManagementResource.getPositionsInBucket("BucketC")).isEqualTo(ImmutableSet.of("NVDA"));
+        assertThat(bucketManagementResource.getPositionsInBucket("BucketZ")).isEmpty();
+        assertThat(bucketManagementResource.getBucketsForSymbol("NVDA"))
+                .isEqualTo(ImmutableList.of("BucketA", "BucketB", "BucketC"));
 
         bucketManagementResource.insertSymbolIntoBuckets("AMZN", ImmutableSet.of("BucketB", "BucketC"));
+        bucketManagementResource.insertSymbolIntoBuckets("TSLA", ImmutableSet.of("BucketB", "BucketC"));
+
         assertThat(bucketManagementResource.getAllBuckets())
-                .isEqualTo(ImmutableList.of("BucketA", "BucketB", "BucketC", "BucketZ"));
+                .isEqualTo(ImmutableMap.of(
+                        "BucketA", ImmutableList.of("NVDA"),
+                        "BucketB", ImmutableList.of("AMZN", "NVDA", "TSLA"),
+                        "BucketC", ImmutableList.of("AMZN", "NVDA", "TSLA"),
+                        "BucketZ", ImmutableList.of()));
+
         assertThat(bucketManagementResource.getPositionsInBucket("BucketA")).isEqualTo(ImmutableSet.of("NVDA"));
-        assertThat(bucketManagementResource.getPositionsInBucket("BucketB")).isEqualTo(ImmutableSet.of("NVDA", "AMZN"));
-        assertThat(bucketManagementResource.getPositionsInBucket("BucketC")).isEqualTo(ImmutableSet.of("NVDA", "AMZN"));
+        assertThat(bucketManagementResource.getPositionsInBucket("BucketB"))
+                .isEqualTo(ImmutableSet.of("NVDA", "AMZN", "TSLA"));
+        assertThat(bucketManagementResource.getPositionsInBucket("BucketC"))
+                .isEqualTo(ImmutableSet.of("NVDA", "AMZN", "TSLA"));
         assertThat(bucketManagementResource.getPositionsInBucket("BucketZ")).isEmpty();
+        assertThat(bucketManagementResource.getBucketsForSymbol("AMZN"))
+                .isEqualTo(ImmutableList.of("BucketB", "BucketC"));
+        assertThat(bucketManagementResource.getBucketsForSymbol("NVDA"))
+                .isEqualTo(ImmutableList.of("BucketA", "BucketB", "BucketC"));
+        assertThat(bucketManagementResource.getBucketsForSymbol("TSLA"))
+                .isEqualTo(ImmutableList.of("BucketB", "BucketC"));
     }
 }

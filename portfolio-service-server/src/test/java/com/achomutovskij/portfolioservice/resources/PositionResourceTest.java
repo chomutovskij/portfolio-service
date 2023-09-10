@@ -26,6 +26,7 @@ import com.achomutovskij.portfolioservice.api.StockPosition;
 import com.achomutovskij.portfolioservice.api.TradeType;
 import com.achomutovskij.portfolioservice.marketdata.MarketDataProvider;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.palantir.conjure.java.api.errors.ErrorType;
@@ -123,7 +124,7 @@ class PositionResourceTest {
     }
 
     @Test
-    public void addToBucket() {
+    public void addToBucketAfterOrder() {
         String nvidia = "NVDA";
         Mockito.when(marketDataProviderMock.getPrice(nvidia, SEPT_7)).thenReturn(462.41);
 
@@ -139,10 +140,10 @@ class PositionResourceTest {
 
         positionResource.addSymbolToBuckets(BucketsUpdateRequest.of(nvidia, ImmutableSet.of("A", "B")));
 
-        assertThat(bucketManagementResource.getPositionsInBucket("A")).isEqualTo(ImmutableSet.of(nvidia));
-        assertThat(bucketManagementResource.getPositionsInBucket("B")).isEqualTo(ImmutableSet.of(nvidia));
-        assertThat(bucketManagementResource.getBucketsForSymbol(nvidia)).isEqualTo(ImmutableList.of("A", "B"));
-        assertThat(bucketManagementResource.getAllBuckets()).isEqualTo(ImmutableList.of("A", "B"));
+        assertThat(bucketManagementResource.getAllBuckets())
+                .isEqualTo(ImmutableMap.of(
+                        "A", ImmutableList.of("NVDA"),
+                        "B", ImmutableList.of("NVDA")));
 
         Mockito.when(marketDataProviderMock.getLatestPrice(nvidia)).thenReturn(455.72);
 
@@ -175,17 +176,17 @@ class PositionResourceTest {
                 .buckets(ImmutableSet.of("B", "A"))
                 .build());
 
-        assertThat(bucketManagementResource.getPositionsInBucket("A")).isEqualTo(ImmutableSet.of(nvidia));
-        assertThat(bucketManagementResource.getPositionsInBucket("B")).isEqualTo(ImmutableSet.of(nvidia));
-        assertThat(bucketManagementResource.getBucketsForSymbol(nvidia)).isEqualTo(ImmutableList.of("A", "B"));
-        assertThat(bucketManagementResource.getAllBuckets()).isEqualTo(ImmutableList.of("A", "B"));
+        assertThat(bucketManagementResource.getAllBuckets())
+                .isEqualTo(ImmutableMap.of(
+                        "A", ImmutableList.of("NVDA"),
+                        "B", ImmutableList.of("NVDA")));
 
         positionResource.removeSymbolFromBuckets(BucketsUpdateRequest.of(nvidia, ImmutableSet.of("B")));
 
-        assertThat(bucketManagementResource.getPositionsInBucket("A")).isEqualTo(ImmutableSet.of(nvidia));
-        assertThat(bucketManagementResource.getPositionsInBucket("B")).isEmpty();
-        assertThat(bucketManagementResource.getBucketsForSymbol(nvidia)).isEqualTo(ImmutableList.of("A"));
-        assertThat(bucketManagementResource.getAllBuckets()).isEqualTo(ImmutableList.of("A", "B"));
+        assertThat(bucketManagementResource.getAllBuckets())
+                .isEqualTo(ImmutableMap.of(
+                        "A", ImmutableList.of("NVDA"),
+                        "B", ImmutableList.of()));
 
         Mockito.when(marketDataProviderMock.getLatestPrice(nvidia)).thenReturn(455.72);
 
@@ -245,10 +246,10 @@ class PositionResourceTest {
                         .buckets(ImmutableList.of("A", "B"))
                         .build());
 
-        assertThat(bucketManagementResource.getPositionsInBucket("A")).isEqualTo(ImmutableSet.of(nvidia));
-        assertThat(bucketManagementResource.getPositionsInBucket("B")).isEqualTo(ImmutableSet.of(nvidia));
-        assertThat(bucketManagementResource.getBucketsForSymbol(nvidia)).isEqualTo(ImmutableList.of("A", "B"));
-        assertThat(bucketManagementResource.getAllBuckets()).isEqualTo(ImmutableList.of("A", "B"));
+        assertThat(bucketManagementResource.getAllBuckets())
+                .isEqualTo(ImmutableMap.of(
+                        "A", ImmutableList.of("NVDA"),
+                        "B", ImmutableList.of("NVDA")));
     }
 
     @Test
@@ -277,9 +278,10 @@ class PositionResourceTest {
         Assertions.assertThatServiceExceptionThrownBy(() -> positionResource.getStockPosition("NVDA"))
                 .hasType(ErrorType.create(ErrorType.Code.NOT_FOUND, "Holding:NoSuchHolding"));
 
-        assertThat(bucketManagementResource.getPositionsInBucket("A")).isEmpty();
-        assertThat(bucketManagementResource.getPositionsInBucket("B")).isEmpty();
-        assertThat(bucketManagementResource.getAllBuckets()).isEqualTo(ImmutableList.of("A", "B"));
+        assertThat(bucketManagementResource.getAllBuckets())
+                .isEqualTo(ImmutableMap.of(
+                        "A", ImmutableList.of(),
+                        "B", ImmutableList.of()));
     }
 
     @Test
@@ -316,8 +318,8 @@ class PositionResourceTest {
                 .buckets(ImmutableSet.of("A"))
                 .build());
 
-        assertThat(bucketManagementResource.getPositionsInBucket("A"))
-                .isEqualTo(ImmutableSet.of(nvidia, amazon, tesla));
+        assertThat(bucketManagementResource.getAllBuckets())
+                .isEqualTo(ImmutableMap.of("A", ImmutableList.of(amazon, nvidia, tesla)));
 
         Mockito.when(marketDataProviderMock.getLatestPrice(nvidia)).thenReturn(455.72);
         Mockito.when(marketDataProviderMock.getLatestPrice(amazon)).thenReturn(138.23);
