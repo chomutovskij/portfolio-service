@@ -9,8 +9,8 @@
 ### Running the server with docker:
 - docker image is available at [docker hub](https://hub.docker.com/r/chomutovskij/portfolio-service-server/tags)
 - run the below 2 commands in the terminal:
-  - `docker pull chomutovskij/portfolio-service-server:2.0.0`
-  - `docker run -p 8345:8345 -p 8346:8346 chomutovskij/portfolio-service-server:2.0.0`
+  - `docker pull chomutovskij/portfolio-service-server:<version>`
+  - `docker run -p 8345:8345 -p 8346:8346 chomutovskij/portfolio-service-server:<version>`
 - in a separate terminal window, run the [curls](#apis), but first read the note on certificates just below
 
 ### Note on certificates
