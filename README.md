@@ -74,15 +74,16 @@ curl -k -X PUT -H "Content-Type: application/json" -d '{"symbol": "NVDA", "bucke
 ## Tools used for the service and repo structure
 
 ### Tools and Libraries
+
 This service uses the following tools and libraries, please consult their respective documentation for more information.
 * [conjure](https://github.com/palantir/conjure) - IDL for defining APIs once and generating client/server interfaces in different languages.
-    * [conjure-java-runtime](https://github.com/palantir/conjure-java-runtime/) - conjure libraries for HTTP&JSON-based RPC using Retrofit, Feign, OkHttp as clients and Jetty/Jersey as servers
-    * [conjure-java](https://github.com/palantir/conjure-java) - conjure generator for java clients and servers 
-    * [conjure-typescript](https://github.com/palantir/conjure-typescript) - conjure generator for typescript clients
+  * [conjure-java-runtime](https://github.com/palantir/conjure-java-runtime/) - conjure libraries for HTTP&JSON-based RPC using Retrofit, Feign, OkHttp as clients and Jetty/Jersey as servers
+  * [conjure-java](https://github.com/palantir/conjure-java) - conjure generator for java clients and servers
+  * [conjure-typescript](https://github.com/palantir/conjure-typescript) - conjure generator for typescript clients
 * [gradle](https://gradle.org/) - a highly flexible build tool. Some of the gradle plugins applied are:
-     *  [gradle-conjure](https://github.com/palantir/gradle-conjure) - a gradle plugin that contains tasks to generate conjure bindings.
-     *  [gradle-baseline](https://github.com/palantir/gradle-baseline) - a gradle plugin for configuring code quality tools in builds and projects.
-* [dropwizard](https://www.dropwizard.io/en/stable/) - a simple framework for building web services
+  *  [gradle-conjure](https://github.com/palantir/gradle-conjure) - a gradle plugin that contains tasks to generate conjure bindings.
+  *  [gradle-baseline](https://github.com/palantir/gradle-baseline) - a gradle plugin for configuring code quality tools in builds and projects.
+* [undertow](https://undertow.io/) - a simple framework for building web services
 
 ### Project Structure
 * `portfolio-service-api` - a sub-project that defines portfolio-service APIs in Conjure and generates both java and typescript bindings.
@@ -91,26 +92,27 @@ This service uses the following tools and libraries, please consult their respec
     ```
     ├── portfolio-service-api
     │   ├── build.gradle
-    │   ├── portfolio-service-api-jersey
+    │   ├── portfolio-service-api-dialogue
     │   ├── portfolio-service-api-objects
     │   ├── portfolio-service-api-typescript
+    │   ├── portfolio-service-api-undertow
     │   └── src
     │       └── main
     │           └── conjure
     │               └── portfolio-service-api.yml
     ```
-    * build.gradle - a gradle script that 
-        1. configures sub-projects with needed dependencies to generate java bindings. e.g. `portfolio-service-api-jersey`
-        2. configures `publishTypescript` task to generate `.npmrc` in the generated root folder, `portfolio-service-api-typescript/src` for publishing the generated npm module.
-        3. modifies the `conjure` extension to specify the package name under which the npm module will be published.
-    * portfolio-service-api-jersey - the sub-project where all generated [service interfaces](portfolio-service-api/src/main/conjure/portfolio-service-api.yml#L51) live.
-    * portfolio-service-api-objects - the sub-project where all generated [object classes](portfolio-service-api/src/main/conjure/portfolio-service-api.yml#L4) live.
-    * portfolio-service-api-typescript - the sub-project where all generated typescript bindings live.
-    * src/main/conjure - directory containing conjure definition yml files where recipe APIs are defined, please refer to [specification.md](https://github.com/palantir/conjure/blob/develop/docs/specification.md) for more details.
+  * `build.gradle` - a gradle script that
+    1. configures sub-projects with needed dependencies to generate java bindings. e.g. `portfolio-service-api-dialogue`
+    2. configures `publishTypescript` task to generate `.npmrc` in the generated root folder, `portfolio-service-api-typescript/src` for publishing the generated npm module.
+    3. modifies the `conjure` extension to specify the package name under which the npm module will be published.
+  * `portfolio-service-api-dialogue` - the sub-project where all generated [service interfaces](portfolio-service-api/src/main/conjure/portfolio-service-api.yml#L93) live.
+  * `portfolio-service-api-objects` - the sub-project where all generated [object classes](portfolio-service-api/src/main/conjure/portfolio-service-api.yml#L4) live.
+  * `portfolio-service-api-typescript` - the sub-project where all generated typescript bindings live.
+  * `src/main/conjure` - directory containing conjure definition yml files where recipe APIs are defined, please refer to [specification.md](https://github.com/palantir/conjure/blob/develop/docs/specification.md) for more details.
 
-* `portfolio-service-server` - a dropwizard application project that uses conjure generated jersey binding for resource class implementation
+* `portfolio-service-server` - an Undertow application project that uses conjure generated Undertow binding for resource class implementation
 
-    This is what the server project looks like:
+  This is what the server project looks like:
     ```
     ├── portfolio-service-server
     │   ├── build.gradle
@@ -121,14 +123,14 @@ This service uses the following tools and libraries, please consult their respec
     │       └── conf
     │           └── conf.yml
     ```
-    * build.gradle - configures the project with needed dependencies and applies the `gradle-conjure` and `application plugins`, so we can run the server locally or in IDE.
-    * src/main/java - source classes for the dropwizard application. e.g. `DateResource.java` class `implements` the generated Jersey interface.
-    * test/main/java - test source classes for simple integration tests that uses generated jersey interface for client interaction.
-    * var/conf/conf.yml - the dropwizard application configuration yml file
+  * `build.gradle` - configures the project with needed dependencies and applies the `gradle-conjure` and `application plugins`, so we can run the server locally or in IDE.
+  * `src/main/java` - source classes for the Undertow application. e.g. `portfolioBookingResource.java` class `implements` the generated Undertow interface.
+  * `test/main/java` - test source classes for simple integration tests that uses generated jersey interface for client interaction.
+  * `var/conf/conf.yml` - the Undertow application configuration yml file
 
-* build.gradle - the root level gradle script where a set of gradle plugins are configured, including [gradle-conjure](https://github.com/palantir/gradle-conjure).
-* settings.gradle - the gradle settings file where all sub projects are configured.
-* versions.props - a property file of the [nebula version recommender plugin](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin) with which we can specify versions of project dependencies, including conjure generators.
+* `build.gradle` - the root level gradle script where a set of gradle plugins are configured, including [gradle-conjure](https://github.com/palantir/gradle-conjure).
+* `settings.gradle` - the gradle settings file where all sub projects are configured.
+* `versions.props` - a property file of the [nebula version recommender plugin](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin) with which we can specify versions of project dependencies, including conjure generators.
 
 ## Development
 
