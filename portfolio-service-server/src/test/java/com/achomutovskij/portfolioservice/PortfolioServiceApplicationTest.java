@@ -18,9 +18,11 @@ package com.achomutovskij.portfolioservice;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.achomutovskij.portfolioservice.api.BucketErrors;
 import com.achomutovskij.portfolioservice.api.BucketManagementServiceBlocking;
 import com.achomutovskij.portfolioservice.api.BucketPosition;
 import com.achomutovskij.portfolioservice.api.BucketsUpdateRequest;
+import com.achomutovskij.portfolioservice.api.HoldingErrors;
 import com.achomutovskij.portfolioservice.api.OrderRequest;
 import com.achomutovskij.portfolioservice.api.PositionServiceBlocking;
 import com.achomutovskij.portfolioservice.api.StockPosition;
@@ -29,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.conjure.java.api.config.service.UserAgent;
+import com.palantir.conjure.java.api.testing.Assertions;
 import com.palantir.conjure.java.client.config.ClientConfiguration;
 import com.palantir.conjure.java.client.config.ClientConfigurations;
 import com.palantir.conjure.java.lib.SafeLong;
@@ -200,5 +203,32 @@ public class PortfolioServiceApplicationTest {
                 .isEqualTo(ImmutableMap.of(
                         "BucketA", ImmutableList.of("AMZN"),
                         "BucketB", ImmutableList.of("NVDA")));
+    }
+
+    @Test
+    public void addAndRemoveSymbolToBucketsTest() {
+        Assertions.assertThatRemoteExceptionThrownBy(() -> positionService.addSymbolToBuckets(
+                        BucketsUpdateRequest.of("UNKNOWN", ImmutableSet.of("BucketZ"))))
+                .isGeneratedFromErrorType(HoldingErrors.NO_SUCH_HOLDING);
+
+        Assertions.assertThatRemoteExceptionThrownBy(() -> positionService.removeSymbolFromBuckets(
+                        BucketsUpdateRequest.of("UNKNOWN", ImmutableSet.of("BucketZ"))))
+                .isGeneratedFromErrorType(HoldingErrors.NO_SUCH_HOLDING);
+
+        positionService.addOrder(OrderRequest.builder()
+                .type(TradeType.BUY)
+                .symbol("AA")
+                .date(SEPT_5)
+                .quantity(10)
+                .buckets(ImmutableSet.of())
+                .build());
+
+        Assertions.assertThatRemoteExceptionThrownBy(
+                        () -> positionService.addSymbolToBuckets(BucketsUpdateRequest.of("AA", ImmutableSet.of())))
+                .isGeneratedFromErrorType(BucketErrors.BUCKET_SET_EMPTY);
+
+        Assertions.assertThatRemoteExceptionThrownBy(
+                        () -> positionService.removeSymbolFromBuckets(BucketsUpdateRequest.of("AA", ImmutableSet.of())))
+                .isGeneratedFromErrorType(BucketErrors.BUCKET_SET_EMPTY);
     }
 }
