@@ -1,11 +1,11 @@
 apply plugin: 'application'
+apply plugin: 'com.palantir.baseline-class-uniqueness'
 
 dependencies {
     annotationProcessor 'org.immutables:value'
     compileOnly 'org.immutables:value::annotations'
 
     implementation project(':portfolio-service-api:portfolio-service-api-objects')
-    implementation project(':portfolio-service-api:portfolio-service-api-jersey')
     implementation project(':portfolio-service-api:portfolio-service-api-undertow')
 
     implementation 'com.palantir.conjure.java:conjure-java-undertow-runtime'
@@ -13,25 +13,20 @@ dependencies {
     implementation 'com.palantir.safe-logging:logger'
     implementation 'com.google.guava:guava'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-guava'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
-    implementation 'com.palantir.conjure.java.runtime:conjure-java-jackson-serialization'
-    implementation 'com.palantir.conjure.java.runtime:conjure-java-jersey-server'
     implementation 'com.palantir.conjure.java.runtime:keystores'
     implementation 'com.palantir.conjure.java.api:ssl-config'
 
-    compile 'org.slf4j:slf4j-simple'
-    implementation 'org.slf4j:slf4j-api'
-
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.squareup.okhttp3:okhttp'
-    implementation 'com.github.ben-manes.caffeine:caffeine'
-
     implementation 'org.decimal4j:decimal4j:1.0.3'
 
-    testImplementation 'junit:junit'
-    testImplementation 'org.assertj:assertj-core'
-    testImplementation 'com.palantir.conjure.java.runtime:conjure-java-jaxrs-client'
+    testImplementation project(':portfolio-service-api:portfolio-service-api-dialogue')
+    testImplementation 'com.palantir.dialogue:dialogue-clients'
     testImplementation 'com.palantir.conjure.java.api:test-utils'
+    testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'

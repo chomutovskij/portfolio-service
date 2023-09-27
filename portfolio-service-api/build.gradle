@@ -1,12 +1,5 @@
 apply plugin: 'com.palantir.conjure'
 
-configure(subprojects - project('portfolio-service-api-typescript')) {
-    dependencies {
-        compile 'com.palantir.conjure.java:conjure-lib'
-        compile 'com.fasterxml.jackson.core:jackson-databind'
-    }
-}
-
 project (':portfolio-service-api:portfolio-service-api-typescript') {
     publishTypeScript.doFirst {
         file('src/.npmrc') << "//registry.npmjs.org/:_authToken=${System.env.NPM_AUTH_TOKEN}"
@@ -21,5 +14,8 @@ conjure {
 
     java {
         undertowServicePrefixes = true
+        useImmutableBytes = true
+        strictObjects = true
+        nonNullCollections = true
     }
 }

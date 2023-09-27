@@ -18,11 +18,11 @@ package com.achomutovskij.portfolioservice;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.achomutovskij.portfolioservice.api.BucketManagementService;
+import com.achomutovskij.portfolioservice.api.BucketManagementServiceBlocking;
 import com.achomutovskij.portfolioservice.api.BucketPosition;
 import com.achomutovskij.portfolioservice.api.BucketsUpdateRequest;
 import com.achomutovskij.portfolioservice.api.OrderRequest;
-import com.achomutovskij.portfolioservice.api.PositionService;
+import com.achomutovskij.portfolioservice.api.PositionServiceBlocking;
 import com.achomutovskij.portfolioservice.api.StockPosition;
 import com.achomutovskij.portfolioservice.api.TradeType;
 import com.google.common.collect.ImmutableList;
@@ -31,9 +31,8 @@ import com.google.common.collect.ImmutableSet;
 import com.palantir.conjure.java.api.config.service.UserAgent;
 import com.palantir.conjure.java.client.config.ClientConfiguration;
 import com.palantir.conjure.java.client.config.ClientConfigurations;
-import com.palantir.conjure.java.client.jaxrs.JaxRsClient;
 import com.palantir.conjure.java.lib.SafeLong;
-import com.palantir.conjure.java.okhttp.NoOpHostEventsSink;
+import com.palantir.dialogue.clients.DialogueClients;
 import io.undertow.Undertow;
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,8 +58,8 @@ public class PortfolioServiceApplicationTest {
 
     private static final OffsetDateTime SEPT_5 = OffsetDateTime.of(2023, 9, 5, 0, 0, 0, 0, ZoneOffset.UTC);
 
-    private static BucketManagementService bucketManagementService;
-    private static PositionService positionService;
+    private static BucketManagementServiceBlocking bucketManagementService;
+    private static PositionServiceBlocking positionService;
 
     private static Undertow server;
 
@@ -91,20 +90,13 @@ public class PortfolioServiceApplicationTest {
         sslContext.init(null, trustManager, null);
 
         ClientConfiguration clientConfig = ClientConfigurations.of(
-                ImmutableList.of("https://localhost:8345/api/"), sslContext.getSocketFactory(), (X509TrustManager)
-                        trustManager[0]);
+                ImmutableList.of("https://localhost:8345/api/"),
+                sslContext.getSocketFactory(),
+                (X509TrustManager) trustManager[0],
+                UserAgent.of(UserAgent.Agent.of("portfolio-service-client-test", "0.0.0")));
 
-        bucketManagementService = JaxRsClient.create(
-                BucketManagementService.class,
-                UserAgent.of(UserAgent.Agent.of("test", "0.0.0")),
-                NoOpHostEventsSink.INSTANCE,
-                clientConfig);
-
-        positionService = JaxRsClient.create(
-                PositionService.class,
-                UserAgent.of(UserAgent.Agent.of("test", "0.0.0")),
-                NoOpHostEventsSink.INSTANCE,
-                clientConfig);
+        bucketManagementService = DialogueClients.create(BucketManagementServiceBlocking.class, clientConfig);
+        positionService = DialogueClients.create(PositionServiceBlocking.class, clientConfig);
     }
 
     @AfterAll

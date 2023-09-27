@@ -2,7 +2,7 @@ rootProject.name = 'portfolio-service'
 
 include 'portfolio-service-server'
 include 'portfolio-service-api'
+include 'portfolio-service-api:portfolio-service-api-dialogue'
 include 'portfolio-service-api:portfolio-service-api-undertow'
 include 'portfolio-service-api:portfolio-service-api-objects'
-include 'portfolio-service-api:portfolio-service-api-jersey'
 include 'portfolio-service-api:portfolio-service-api-typescript'
