@@ -23,6 +23,9 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'org.decimal4j:decimal4j:1.0.3'
 
+    runtimeOnly 'org.slf4j:slf4j-simple'
+    runtimeOnly 'org.slf4j:slf4j-api'
+
     testImplementation project(':portfolio-service-api:portfolio-service-api-dialogue')
     testImplementation 'com.palantir.dialogue:dialogue-clients'
     testImplementation 'com.palantir.conjure.java.api:test-utils'

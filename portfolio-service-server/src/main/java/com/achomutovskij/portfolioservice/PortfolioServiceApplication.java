@@ -88,10 +88,7 @@ public final class PortfolioServiceApplication {
 
         server.start();
 
-        log.info("------------!!!!!---------------");
         log.info("The portfolio service is running");
-        log.info("Run curl commands to test");
-        log.info("------------!!!!!---------------");
 
         return server;
     }
